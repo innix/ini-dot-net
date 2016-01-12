@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace IniDotNet
 {
@@ -56,9 +58,21 @@ namespace IniDotNet
                 {
                     throw new IniException($"Unexpected content on line {lineNumber}: '{line}'");
                 }
+                if (idx == 0)
+                {
+                    throw new IniException($"Empty key on line {lineNumber}: '{line}'");
+                }
 
-                string key = line.Substring(0, idx);
-                string value = line.Substring(idx + 1);
+                // If equals sign is padded with a space on either side (e.g. "key = value"),
+                // then make sure we ignore it when extracting key and value.
+                int offset = 0;
+                if (char.IsWhiteSpace(line[idx - 1]) && char.IsWhiteSpace(line.ElementAtOrDefault(idx + 1)))
+                {
+                    offset = 1;
+                }
+
+                string key = line.Substring(0, idx - offset);
+                string value = line.Substring(idx + 1 + offset);
 
                 if (contents.ContainsKey(key))
                 {
