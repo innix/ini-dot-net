@@ -90,7 +90,12 @@ namespace IniDotNet
                 // Do conversion.
                 try
                 {
-                    object convertedValue = converter.ConvertTo(destinationProperty.PropertyType, kvp.Value);
+                    object convertedValue;
+                    if (!converter.TryConvertTo(destinationProperty.PropertyType, kvp.Value, out convertedValue))
+                    {
+                        throw new IniException($"['{section.Name}'.'{kvp.Key}'] No conversion for property.");
+                    }
+
                     destinationProperty.SetValue(configSectionModel, convertedValue);
                 }
                 catch (NotSupportedException ex)

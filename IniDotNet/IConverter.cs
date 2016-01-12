@@ -7,7 +7,7 @@ namespace IniDotNet
 {
     public interface IConverter
     {
-        object ConvertTo(Type type, string stringValue);
+        bool TryConvertTo(Type type, string stringValue, out object converted);
     }
 
     public sealed class StandardConverter : IConverter
@@ -23,6 +23,44 @@ namespace IniDotNet
 
             throw new NotSupportedException($"No suitable conversion exists to convert to '{type.FullName}'.");
         }
+
+        public bool TryConvertTo(Type type, string stringValue, out object converted)
+        {
+            TypeConverter tc = TypeDescriptor.GetConverter(type);
+
+            if (tc.CanConvertFrom(typeof(string)))
+            {
+                converted = tc.ConvertFrom(stringValue);
+                return true;
+            }
+
+            converted = null;
+            return false;
+        }
+    }
+
+    public sealed class CompositeConverter : IConverter
+    {
+        private readonly IConverter[] converters;
+
+        public CompositeConverter(params IConverter[] converters)
+        {
+            this.converters = converters;
+        }
+
+        public bool TryConvertTo(Type type, string stringValue, out object converted)
+        {
+            foreach (IConverter converter in converters)
+            {
+                if (converter.TryConvertTo(type, stringValue, out converted))
+                {
+                    return true;
+                }
+            }
+
+            converted = null;
+            return false;
+        }
     }
 
     public sealed class CollectionConverter : IConverter
@@ -36,7 +74,7 @@ namespace IniDotNet
             this.seperator = seperator;
         }
 
-        public object ConvertTo(Type type, string stringValue)
+        public bool TryConvertTo(Type type, string stringValue, out object converted)
         {
             var listTypeBuilder = new ListTypeBuilder(type);
 
@@ -49,10 +87,17 @@ namespace IniDotNet
 
             foreach (string listItem in stringValue.Split(new[] { seperator }, StringSplitOptions.None))
             {
-                listTypeBuilder.Add(itemConverter.ConvertTo(listType, listItem));
+                object convertedItem;
+                if (!itemConverter.TryConvertTo(listType, listItem, out convertedItem))
+                {
+                    throw new NotSupportedException($"No suitable conversion exists to convert to '{listType.FullName}'.");
+                }
+
+                listTypeBuilder.Add(convertedItem);
             }
 
-            return listTypeBuilder.Build();
+            converted = listTypeBuilder.Build();
+            return true;
         }
     }
 
