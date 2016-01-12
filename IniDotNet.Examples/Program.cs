@@ -37,7 +37,7 @@ DelayBetweenConnects = 5000
             Debug.Assert(cfg.General.EnableThing);
             Debug.Assert(cfg.General.Key == "qwerty");
 
-            foreach (string endPoint in cfg.Abc.EndPoints)
+            foreach (IPEndPoint endPoint in cfg.Abc.EndPoints)
             {
                 Console.WriteLine(endPoint);
             }
@@ -63,7 +63,7 @@ DelayBetweenConnects = 5000
     public class AbcConfig
     {
         [IniListProperty(",")]
-        public IReadOnlyList<string> EndPoints { get; private set; }
+        public IReadOnlyList<IPEndPoint> EndPoints { get; private set; }
 
         public int DelayBetweenConnects { get; private set; }
         public int ConnectAttemptsPerEndPoint { get; private set; }

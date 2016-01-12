@@ -1,30 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace IniDotNet
+namespace IniDotNet.Parsers
 {
-    public interface IIniSectionReader
-    {
-        IEnumerable<IniSection> Read(TextReader reader);
-    }
-
-    internal class StandardIniSectionReader : IIniSectionReader
+    public sealed class DefaultFileParser : IFileParser
     {
         private readonly bool throwOnDuplicateKeys;
 
-        public StandardIniSectionReader() : this(true)
+        public DefaultFileParser() : this(true)
         {
         }
 
-        public StandardIniSectionReader(bool throwOnDuplicateKeys)
+        public DefaultFileParser(bool throwOnDuplicateKeys)
         {
             this.throwOnDuplicateKeys = throwOnDuplicateKeys;
         }
 
-        public IEnumerable<IniSection> Read(TextReader reader)
+        public IEnumerable<IniSection> Parse(TextReader reader)
         {
             int lineNumber = 0;
             string line;

@@ -2,22 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace IniDotNet
+namespace IniDotNet.Binders
 {
-    /// <summary>
-    /// A section binding locator creates a mapping to determine which .INI section
-    /// is bound to which property in the model class.
-    /// </summary>
-    public interface ISectionBindingLocator
-    {
-        IReadOnlyList<SectionBinding> Locate(Type modelType);
-    }
-
-    internal class AttributeBasedSectionBindingLocator : ISectionBindingLocator
+    public sealed class AttributeBasedSectionBinder : ISectionBinder
     {
         private const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        public IReadOnlyList<SectionBinding> Locate(Type modelType)
+        public IReadOnlyList<SectionBinding> Bind(Type modelType)
         {
             var bindings = new List<SectionBinding>();
 

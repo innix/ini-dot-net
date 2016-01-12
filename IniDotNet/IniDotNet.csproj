@@ -40,17 +40,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Binders\AttributeBasedSectionBinder.cs" />
+    <Compile Include="Converters\CollectionConverter.cs" />
+    <Compile Include="Converters\CompositeConverter.cs" />
+    <Compile Include="Converters\IPEndPointConverter.cs" />
+    <Compile Include="Parsers\DefaultFileParser.cs" />
     <Compile Include="IConverter.cs" />
-    <Compile Include="IIniSectionReader.cs" />
+    <Compile Include="IFileParser.cs" />
     <Compile Include="IniConvert.cs" />
     <Compile Include="IniListPropertyAttribute.cs" />
     <Compile Include="IniSection.cs" />
     <Compile Include="IniSectionAttribute.cs" />
-    <Compile Include="ISectionBindingLocator.cs" />
+    <Compile Include="ISectionBinder.cs" />
     <Compile Include="SectionBinding.cs" />
     <Compile Include="IniDeserializer.cs" />
     <Compile Include="IniException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Converters\StandardConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

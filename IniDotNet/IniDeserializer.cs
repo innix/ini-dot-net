@@ -4,6 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using IniDotNet.Binders;
+using IniDotNet.Converters;
+using IniDotNet.Parsers;
 
 namespace IniDotNet
 {
@@ -11,20 +14,26 @@ namespace IniDotNet
     {
         private const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
+        private static readonly IConverter[] DefaultConverters =
+        {
+            new IPEndPointConverter(),
+            new StandardConverter()
+        };
+
         /// <summary>
         /// Reads the .INI file content and parses it into .NET objects.
         /// </summary>
-        public IIniSectionReader Reader { get; set; } = new StandardIniSectionReader();
+        public IFileParser Parser { get; set; } = new DefaultFileParser();
 
         /// <summary>
         /// Generates a set of bindings to determine what fields/properties the .INI sections will be deserialized into.
         /// </summary>
-        public ISectionBindingLocator SectionBinder { get; set; } = new AttributeBasedSectionBindingLocator();
+        public ISectionBinder SectionBinder { get; set; } = new AttributeBasedSectionBinder();
 
         /// <summary>
         /// Converts the string values from the .INI file into .NET types.
         /// </summary>
-        public IConverter Converter { get; set; } = new StandardConverter();
+        public IConverter Converter { get; set; } = new CompositeConverter(DefaultConverters);
 
         #region POCO deserialization
 
@@ -35,11 +44,11 @@ namespace IniDotNet
 
 
             // Locates the properties within the model type and maps them to an .INI section.
-            IReadOnlyList<SectionBinding> bindings = SectionBinder.Locate(configModelType);
+            IReadOnlyList<SectionBinding> bindings = SectionBinder.Bind(configModelType);
 
             using (var reader = new StringReader(iniFileContents))
             {
-                foreach (IniSection section in Reader.Read(reader))
+                foreach (IniSection section in Parser.Parse(reader))
                 {
                     // Finds the binding for the current INI section.
                     SectionBinding binding = bindings
@@ -117,7 +126,7 @@ namespace IniDotNet
 
             using (var reader = new StringReader(iniFileContents))
             {
-                foreach (IniSection section in Reader.Read(reader))
+                foreach (IniSection section in Parser.Parse(reader))
                 {
                     configModel.Add(section.Name, section.Contents);
                 }
@@ -130,7 +139,7 @@ namespace IniDotNet
         {
             using (var reader = new StringReader(iniFileContents))
             {
-                IniSection section = Reader.Read(reader)
+                IniSection section = Parser.Parse(reader)
                     .SingleOrDefault(s => sectionName.Equals(s.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 return section?.Contents ?? new Dictionary<string, string>();
@@ -138,6 +147,5 @@ namespace IniDotNet
         }
 
         #endregion
-
     }
 }
