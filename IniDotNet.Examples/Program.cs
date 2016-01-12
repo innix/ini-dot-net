@@ -17,27 +17,30 @@ namespace IniDotNet.Examples
         {
             // TODO: Inject properties through constructor if available.
             // TODO: Allow custom type conversion.
-            // TODO: Allow IniListProperty to deserialize to any collection type, not just List<T>.
-            // TODO: Allow parsing of values where the equals sign is padded with a space (e.g. "Prop1 = Value1").
 
-            string contents = File.ReadAllText(@"C:\Users\Phil\Desktop\config.ini");
+            string contents = @"
+[General]
+Key = qwerty
+EnableThing = True
 
-            Config cfg = IniDeserializer.Deserialize<Config>(contents);
+[ABC]
+EndPoints = 62.252.201.71:4000,127.0.0.1:4001
+ConnectAttemptsPerEndPoint = 5
+DelayBetweenConnects = 5000
+";
+
+            Config cfg = IniConvert.DeserializeObject<Config>(contents);
 
             Debug.Assert(cfg != null);
             Debug.Assert(cfg.General != null);
-            Debug.Assert(cfg.Spe != null);
 
-            Debug.Assert(cfg.General.NodeName == "foo");
-            Debug.Assert(cfg.General.NodeIndex == 12);
+            Debug.Assert(cfg.General.EnableThing);
+            Debug.Assert(cfg.General.Key == "qwerty");
 
-            Debug.Assert(cfg.Spe.EndPoints != null);
-            Debug.Assert(cfg.Spe.EndPoints.Count == 2);
-            Debug.Assert(cfg.Spe.EndPoints.First() == "127.0.0.1:1234");
-
-            Debug.Assert(cfg.Spe.Ids != null);
-            Debug.Assert(cfg.Spe.Ids.Count == 3);
-            Debug.Assert(cfg.Spe.Ids.Skip(1).First() == 456);
+            foreach (string endPoint in cfg.Abc.EndPoints)
+            {
+                Console.WriteLine(endPoint);
+            }
         }
     }
 
@@ -46,22 +49,23 @@ namespace IniDotNet.Examples
         [IniSection("General")]
         public GeneralConfig General { get; private set; }
 
-        [IniSection("SignalProcessing")]
-        public SpeConfig Spe { get; private set; }
+        [IniSection("ABC")]
+        public AbcConfig Abc { get; private set; }
     }
 
-    class GeneralConfig
+    public class GeneralConfig
     {
-        public string NodeName { get; private set; }
-        public int NodeIndex { get; private set; }
+        public string Key { get; private set; }
+        public bool EnableThing { get; private set; }
     }
 
-    class SpeConfig
+
+    public class AbcConfig
     {
         [IniListProperty(",")]
         public IReadOnlyList<string> EndPoints { get; private set; }
 
-        [IniListProperty(",")]
-        public IReadOnlyList<int> Ids { get; private set; }
+        public int DelayBetweenConnects { get; private set; }
+        public int ConnectAttemptsPerEndPoint { get; private set; }
     }
 }
