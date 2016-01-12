@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -69,54 +68,27 @@ namespace IniDotNet
 
                 IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
 
-                // Get a type converter to try and convert our string representation
-                // into the type of the destination property.
-                TypeConverter tc;
-
-                ListTypeBuilder listTypeBuilder = null;
-
+                // Find correct converter.
+                IConverter converter;
                 if (listAttr == null)
                 {
-                    tc = TypeDescriptor.GetConverter(destinationProperty.PropertyType);
+                    converter = new StandardConverter();
                 }
                 else
                 {
-                    listTypeBuilder = new ListTypeBuilder(destinationProperty.PropertyType);
-
-                    // Gets the T from IEnumerable<T>.
-                    Type listType = listTypeBuilder.GetItemType();
-                    if (listType == null)
-                    {
-                        throw new IniException(
-                            $"Property '{section.Name}'.'{kvp.Key}' marked as list does not implement IEnumerable<T>.");
-                    }
-
-                    tc = TypeDescriptor.GetConverter(listType);
+                    converter = new CollectionConverter(new StandardConverter(), listAttr.Separator);
                 }
 
-                if (!tc.CanConvertFrom(typeof(string)))
+                // Do conversion.
+                try
                 {
-                    throw new IniException(
-                        $"No suitable conversion exists to convert '{section.Name}'.'{kvp.Key}' " +
-                        $"to '{destinationProperty.PropertyType.FullName}'.");
+                    object convertedValue = converter.ConvertTo(destinationProperty.PropertyType, kvp.Value);
+                    destinationProperty.SetValue(configSectionModel, convertedValue);
                 }
-
-                object convertedValue;
-                if (listAttr == null)
+                catch (NotSupportedException ex)
                 {
-                    convertedValue = tc.ConvertFrom(kvp.Value);
+                    throw new IniException($"['{section.Name}'.'{kvp.Key}'] {ex.Message}");
                 }
-                else
-                {
-                    foreach (string listItem in kvp.Value.Split(new[] {listAttr.Separator}, StringSplitOptions.None))
-                    {
-                        listTypeBuilder.Add(tc.ConvertFrom(listItem));
-                    }
-
-                    convertedValue = listTypeBuilder.Build();
-                }
-
-                destinationProperty.SetValue(configSectionModel, convertedValue);
             }
 
             return configSectionModel;
