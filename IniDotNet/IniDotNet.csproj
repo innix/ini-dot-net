@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="IConverter.cs" />
     <Compile Include="IIniSectionReader.cs" />
+    <Compile Include="IniConvert.cs" />
     <Compile Include="IniListPropertyAttribute.cs" />
     <Compile Include="IniSection.cs" />
     <Compile Include="IniSectionAttribute.cs" />

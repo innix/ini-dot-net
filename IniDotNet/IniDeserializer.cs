@@ -19,7 +19,7 @@ namespace IniDotNet
         /// <summary>
         /// Generates a set of bindings to determine what fields/properties the .INI sections will be deserialized into.
         /// </summary>
-        public ISectionBindingLocator BindingLocator { get; set; } = new AttributeBasedSectionBindingLocator();
+        public ISectionBindingLocator SectionBinder { get; set; } = new AttributeBasedSectionBindingLocator();
 
         /// <summary>
         /// Converts the string values from the .INI file into .NET types.
@@ -35,7 +35,7 @@ namespace IniDotNet
 
 
             // Locates the properties within the model type and maps them to an .INI section.
-            IReadOnlyList<SectionBinding> bindings = BindingLocator.Locate(configModelType);
+            IReadOnlyList<SectionBinding> bindings = SectionBinder.Locate(configModelType);
 
             using (var reader = new StringReader(iniFileContents))
             {
