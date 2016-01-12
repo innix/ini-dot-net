@@ -68,11 +68,12 @@ namespace IniDotNet
                 }
 
                 IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
-                Type listType = null;
 
                 // Get a type converter to try and convert our string representation
                 // into the type of the destination property.
                 TypeConverter tc;
+
+                ListTypeBuilder listTypeBuilder = null;
 
                 if (listAttr == null)
                 {
@@ -80,11 +81,10 @@ namespace IniDotNet
                 }
                 else
                 {
-                    // TODO: we set the property with a List<T>, so the destination property type must
-                    // TODO: be a List<T> or an interface which List<T> implements.
+                    listTypeBuilder = new ListTypeBuilder(destinationProperty.PropertyType);
 
                     // Gets the T from IEnumerable<T>.
-                    listType = GetGenericEnumerableType(destinationProperty.PropertyType);
+                    Type listType = listTypeBuilder.GetItemType();
                     if (listType == null)
                     {
                         throw new IniException(
@@ -94,7 +94,7 @@ namespace IniDotNet
                     tc = TypeDescriptor.GetConverter(listType);
                 }
 
-                if (!tc.CanConvertFrom(typeof (string)))
+                if (!tc.CanConvertFrom(typeof(string)))
                 {
                     throw new IniException(
                         $"No suitable conversion exists to convert '{section.Name}'.'{kvp.Key}' " +
@@ -108,37 +108,18 @@ namespace IniDotNet
                 }
                 else
                 {
-                    convertedValue = Activator.CreateInstance(typeof (List<>).MakeGenericType(listType));
-                    IList nonGenericList = (IList) convertedValue;
-
                     foreach (string listItem in kvp.Value.Split(new[] {listAttr.Separator}, StringSplitOptions.None))
                     {
-                        nonGenericList.Add(tc.ConvertFrom(listItem));
+                        listTypeBuilder.Add(tc.ConvertFrom(listItem));
                     }
+
+                    convertedValue = listTypeBuilder.Build();
                 }
 
                 destinationProperty.SetValue(configSectionModel, convertedValue);
             }
 
             return configSectionModel;
-        }
-
-        private static Type GetGenericEnumerableType(Type t)
-        {
-            if (t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof (IEnumerable<>))
-            {
-                return t.GetGenericArguments()[0];
-            }
-
-            foreach (var i in t.GetInterfaces())
-            {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IEnumerable<>))
-                {
-                    return i.GetGenericArguments()[0];
-                }
-            }
-
-            return null;
         }
 
         #endregion
@@ -173,6 +154,77 @@ namespace IniDotNet
 
         #endregion
 
+    }
+
+    internal sealed class ListTypeBuilder
+    {
+        private readonly Type type;
+        private readonly Type itemType;
+        private readonly IList tempHolderList;
+
+        public ListTypeBuilder(Type type)
+        {
+            this.type = type;
+
+            itemType = GetGenericEnumerableType(type);
+            tempHolderList = new ArrayList();
+        }
+
+        public void Add(object item)
+        {
+            tempHolderList.Add(item);
+        }
+
+        public Type GetItemType()
+        {
+            return itemType;
+        }
+
+        public object Build()
+        {
+            Type genericListType = typeof(List<>).MakeGenericType(itemType);
+            if (type.IsAssignableFrom(genericListType))
+            {
+                IList nonGenericList = (IList) Activator.CreateInstance(genericListType);
+                foreach (object item in tempHolderList)
+                {
+                    nonGenericList.Add(item);
+                }
+
+                return nonGenericList;
+            }
+
+            if (type.IsArray)
+            {
+                Array array = Array.CreateInstance(GetItemType(), tempHolderList.Count);
+                for (int i = 0; i < tempHolderList.Count; i++)
+                {
+                    array.SetValue(tempHolderList[i], i);
+                }
+
+                return array;
+            }
+
+            throw new NotSupportedException($"Cannot deserialize to list type: {type.FullName}");
+        }
+
+        private static Type GetGenericEnumerableType(Type t)
+        {
+            if (t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            {
+                return t.GetGenericArguments()[0];
+            }
+
+            foreach (var i in t.GetInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return i.GetGenericArguments()[0];
+                }
+            }
+
+            return null;
+        }
     }
 
     internal sealed class IniSection
