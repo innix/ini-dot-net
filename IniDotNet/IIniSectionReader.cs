@@ -4,7 +4,7 @@ using System.IO;
 
 namespace IniDotNet
 {
-    internal interface IIniSectionReader
+    public interface IIniSectionReader
     {
         IEnumerable<IniSection> Read(TextReader reader);
     }

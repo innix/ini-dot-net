@@ -6,7 +6,7 @@ namespace IniDotNet
     /// <summary>
     /// Represents a binding between a .INI section and a property.
     /// </summary>
-    internal sealed class SectionBinding
+    public sealed class SectionBinding
     {
         public SectionBinding(string name, PropertyInfo property)
         {

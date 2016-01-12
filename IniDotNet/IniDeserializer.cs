@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,27 +7,39 @@ using System.Reflection;
 
 namespace IniDotNet
 {
-    public static class IniDeserializer
+    public sealed class IniDeserializer
     {
         private const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        private static readonly IIniSectionReader sectionReader = new StandardIniSectionReader();
-        private static readonly ISectionBindingLocator bindingLocator = new AttributeBasedSectionBindingLocator();
+        /// <summary>
+        /// Reads the .INI file content and parses it into .NET objects.
+        /// </summary>
+        public IIniSectionReader Reader { get; set; } = new StandardIniSectionReader();
+
+        /// <summary>
+        /// Generates a set of bindings to determine what fields/properties the .INI sections will be deserialized into.
+        /// </summary>
+        public ISectionBindingLocator BindingLocator { get; set; } = new AttributeBasedSectionBindingLocator();
+
+        /// <summary>
+        /// Converts the string values from the .INI file into .NET types.
+        /// </summary>
+        public IConverter Converter { get; set; } = new StandardConverter();
 
         #region POCO deserialization
 
-        public static T Deserialize<T>(string iniFileContents)
+        public T Deserialize<T>(string iniFileContents)
         {
             object configModel = Activator.CreateInstance<T>();
             Type configModelType = typeof(T);
 
 
             // Locates the properties within the model type and maps them to an .INI section.
-            IReadOnlyList<SectionBinding> bindings = bindingLocator.Locate(configModelType);
+            IReadOnlyList<SectionBinding> bindings = BindingLocator.Locate(configModelType);
 
             using (var reader = new StringReader(iniFileContents))
             {
-                foreach (IniSection section in sectionReader.Read(reader))
+                foreach (IniSection section in Reader.Read(reader))
                 {
                     // Finds the binding for the current INI section.
                     SectionBinding binding = bindings
@@ -52,7 +63,7 @@ namespace IniDotNet
             return (T) configModel;
         }
 
-        private static object DeserializeSection(IniSection section, SectionBinding binding)
+        private object DeserializeSection(IniSection section, SectionBinding binding)
         {
             object configSectionModel = Activator.CreateInstance(binding.Type);
 
@@ -61,22 +72,19 @@ namespace IniDotNet
                 PropertyInfo destinationProperty = binding.Type.GetProperty(kvp.Key, flags | BindingFlags.IgnoreCase);
                 if (destinationProperty == null)
                 {
-                    Debug.WriteLine(
-                        $"Type '{binding.Type.FullName}' has no suitable property for '{section.Name}'.'{kvp.Key}'");
+                    Debug.WriteLine($"Type '{binding.Type.FullName}' has no suitable property" +
+                                    $"for '{section.Name}'.'{kvp.Key}'");
+
                     continue;
                 }
 
                 IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
 
                 // Find correct converter.
-                IConverter converter;
-                if (listAttr == null)
+                IConverter converter = Converter;
+                if (listAttr != null)
                 {
-                    converter = new StandardConverter();
-                }
-                else
-                {
-                    converter = new CollectionConverter(new StandardConverter(), listAttr.Separator);
+                    converter = new CollectionConverter(converter, listAttr.Separator);
                 }
 
                 // Do conversion.
@@ -98,13 +106,13 @@ namespace IniDotNet
 
         #region Dictionary deserialization
 
-        public static IDictionary<string, IDictionary<string, string>> Deserialize(string iniFileContents)
+        public IDictionary<string, IDictionary<string, string>> Deserialize(string iniFileContents)
         {
             var configModel = new Dictionary<string, IDictionary<string, string>>();
 
             using (var reader = new StringReader(iniFileContents))
             {
-                foreach (IniSection section in sectionReader.Read(reader))
+                foreach (IniSection section in Reader.Read(reader))
                 {
                     configModel.Add(section.Name, section.Contents);
                 }
@@ -113,11 +121,11 @@ namespace IniDotNet
             return configModel;
         }
 
-        public static IDictionary<string, string> DeserializeSection(string iniFileContents, string sectionName)
+        public IDictionary<string, string> DeserializeSection(string iniFileContents, string sectionName)
         {
             using (var reader = new StringReader(iniFileContents))
             {
-                IniSection section = sectionReader.Read(reader)
+                IniSection section = Reader.Read(reader)
                     .SingleOrDefault(s => sectionName.Equals(s.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 return section?.Contents ?? new Dictionary<string, string>();
@@ -126,88 +134,5 @@ namespace IniDotNet
 
         #endregion
 
-    }
-
-    internal sealed class ListTypeBuilder
-    {
-        private readonly Type type;
-        private readonly Type itemType;
-        private readonly IList tempHolderList;
-
-        public ListTypeBuilder(Type type)
-        {
-            this.type = type;
-
-            itemType = GetGenericEnumerableType(type);
-            tempHolderList = new ArrayList();
-        }
-
-        public void Add(object item)
-        {
-            tempHolderList.Add(item);
-        }
-
-        public Type GetItemType()
-        {
-            return itemType;
-        }
-
-        public object Build()
-        {
-            Type genericListType = typeof(List<>).MakeGenericType(itemType);
-            if (type.IsAssignableFrom(genericListType))
-            {
-                IList nonGenericList = (IList) Activator.CreateInstance(genericListType);
-                foreach (object item in tempHolderList)
-                {
-                    nonGenericList.Add(item);
-                }
-
-                return nonGenericList;
-            }
-
-            if (type.IsArray)
-            {
-                Array array = Array.CreateInstance(GetItemType(), tempHolderList.Count);
-                for (int i = 0; i < tempHolderList.Count; i++)
-                {
-                    array.SetValue(tempHolderList[i], i);
-                }
-
-                return array;
-            }
-
-            throw new NotSupportedException($"Cannot deserialize to list type: {type.FullName}");
-        }
-
-        private static Type GetGenericEnumerableType(Type t)
-        {
-            if (t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-            {
-                return t.GetGenericArguments()[0];
-            }
-
-            foreach (var i in t.GetInterfaces())
-            {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                {
-                    return i.GetGenericArguments()[0];
-                }
-            }
-
-            return null;
-        }
-    }
-
-    internal sealed class IniSection
-    {
-        public IniSection(string name, IDictionary<string, string> contents)
-        {
-            Name = name;
-            Contents = contents;
-        }
-
-        public string Name { get; }
-        public IDictionary<string, string> Contents { get; }
     }
 }

@@ -4,7 +4,11 @@ using System.Reflection;
 
 namespace IniDotNet
 {
-    internal interface ISectionBindingLocator
+    /// <summary>
+    /// A section binding locator creates a mapping to determine which .INI section
+    /// is bound to which property in the model class.
+    /// </summary>
+    public interface ISectionBindingLocator
     {
         IReadOnlyList<SectionBinding> Locate(Type modelType);
     }
@@ -21,8 +25,7 @@ namespace IniDotNet
             {
                 IniSectionAttribute attr = prop.GetCustomAttribute<IniSectionAttribute>();
 
-                string name = attr?.Name;
-                bindings.Add(new SectionBinding(name ?? prop.Name, prop));
+                bindings.Add(new SectionBinding(attr?.Name ?? prop.Name, prop));
             }
 
             return bindings.AsReadOnly();

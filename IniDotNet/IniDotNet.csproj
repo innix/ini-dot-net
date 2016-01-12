@@ -40,8 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IConverter.cs" />
     <Compile Include="IIniSectionReader.cs" />
     <Compile Include="IniListPropertyAttribute.cs" />
+    <Compile Include="IniSection.cs" />
     <Compile Include="IniSectionAttribute.cs" />
     <Compile Include="ISectionBindingLocator.cs" />
     <Compile Include="SectionBinding.cs" />
