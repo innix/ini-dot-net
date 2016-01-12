@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace IniDotNet
@@ -10,6 +11,17 @@ namespace IniDotNet
 
     internal class StandardIniSectionReader : IIniSectionReader
     {
+        private readonly bool throwOnDuplicateKeys;
+
+        public StandardIniSectionReader() : this(true)
+        {
+        }
+
+        public StandardIniSectionReader(bool throwOnDuplicateKeys)
+        {
+            this.throwOnDuplicateKeys = throwOnDuplicateKeys;
+        }
+
         public IEnumerable<IniSection> Read(TextReader reader)
         {
             int lineNumber = 0;
@@ -50,8 +62,13 @@ namespace IniDotNet
 
                 if (contents.ContainsKey(key))
                 {
-                    // TODO: decide how to resolve key duplicates.
-                    throw new IniException($"Duplicate key '{key}' in section '{name}'.");
+                    if (throwOnDuplicateKeys)
+                    {
+                        throw new IniException($"Duplicate key '{key}' in section '{name}'.");
+                    }
+
+                    Debug.WriteLine($"Ignoring duplicate key '{key}' in section '{name}'.");
+                    continue;
                 }
 
                 contents.Add(key, value);
