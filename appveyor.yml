@@ -1,0 +1,11 @@
+init:
+  - git config --global core.autocrlf input
+
+platform: Any CPU
+
+configuration:
+  - Debug
+  - Release
+
+matrix:
+  fast_finish: true
