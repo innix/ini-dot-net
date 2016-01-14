@@ -87,14 +87,32 @@ namespace IniDotNet
                     continue;
                 }
 
-                IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
 
-                // Find correct converter.
+                IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
+                IniConverterAttribute convertAttr = destinationProperty.GetCustomAttribute<IniConverterAttribute>();
+
                 IConverter converter = Converter;
+
+                // If property has custom converter attribute, create a new instance of it and wrap
+                // it into a IConverter for easy use with existing code.
+                if (convertAttr != null)
+                {
+                    if (!typeof(IniConverter).IsAssignableFrom(convertAttr.ConverterType))
+                    {
+                        throw new IniException("Provided custom converter is not a subclass of IniConverter.");
+                    }
+
+                    IniConverter customConverter =
+                        (IniConverter) Activator.CreateInstance(convertAttr.ConverterType, convertAttr.Args);
+
+                    converter = customConverter.ToTypeConverter();
+                }
+
                 if (listAttr != null)
                 {
                     converter = new CollectionConverter(converter, listAttr.Separator);
                 }
+
 
                 // Do conversion.
                 try

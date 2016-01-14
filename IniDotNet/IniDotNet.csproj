@@ -44,6 +44,8 @@
     <Compile Include="Converters\CollectionConverter.cs" />
     <Compile Include="Converters\CompositeConverter.cs" />
     <Compile Include="Converters\IPEndPointConverter.cs" />
+    <Compile Include="IniConverter.cs" />
+    <Compile Include="IniConverterAttribute.cs" />
     <Compile Include="Parsers\DefaultFileParser.cs" />
     <Compile Include="IConverter.cs" />
     <Compile Include="IFileParser.cs" />
