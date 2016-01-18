@@ -12,7 +12,8 @@ namespace IniDotNet
 {
     public sealed class IniDeserializer
     {
-        private const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags SearchFlags =
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private static readonly IConverter[] DefaultConverters =
         {
@@ -26,7 +27,8 @@ namespace IniDotNet
         public IFileParser Parser { get; set; } = new DefaultFileParser();
 
         /// <summary>
-        /// Generates a set of bindings to determine what fields/properties the .INI sections will be deserialized into.
+        /// Generates a set of bindings to determine what fields/properties the .INI sections
+        /// will be deserialized into.
         /// </summary>
         public ISectionBinder SectionBinder { get; set; } = new AttributeBasedSectionBinder();
 
@@ -78,8 +80,8 @@ namespace IniDotNet
 
             foreach (var kvp in section.Contents)
             {
-                PropertyInfo destinationProperty = binding.Type.GetProperty(kvp.Key, flags | BindingFlags.IgnoreCase);
-                if (destinationProperty == null)
+                PropertyInfo destProperty = binding.Type.GetProperty(kvp.Key, SearchFlags | BindingFlags.IgnoreCase);
+                if (destProperty == null)
                 {
                     Debug.WriteLine($"Type '{binding.Type.FullName}' has no suitable property" +
                                     $"for '{section.Name}'.'{kvp.Key}'");
@@ -88,8 +90,8 @@ namespace IniDotNet
                 }
 
 
-                IniListPropertyAttribute listAttr = destinationProperty.GetCustomAttribute<IniListPropertyAttribute>();
-                IniConverterAttribute convertAttr = destinationProperty.GetCustomAttribute<IniConverterAttribute>();
+                IniListPropertyAttribute listAttr = destProperty.GetCustomAttribute<IniListPropertyAttribute>();
+                IniConverterAttribute convertAttr = destProperty.GetCustomAttribute<IniConverterAttribute>();
 
                 IConverter converter = Converter;
 
@@ -118,12 +120,12 @@ namespace IniDotNet
                 try
                 {
                     object convertedValue;
-                    if (!converter.TryConvertTo(destinationProperty.PropertyType, kvp.Value, out convertedValue))
+                    if (!converter.TryConvertTo(destProperty.PropertyType, kvp.Value, out convertedValue))
                     {
                         throw new IniException($"['{section.Name}'.'{kvp.Key}'] No conversion for property.");
                     }
 
-                    destinationProperty.SetValue(configSectionModel, convertedValue);
+                    destProperty.SetValue(configSectionModel, convertedValue);
                 }
                 catch (NotSupportedException ex)
                 {
@@ -155,13 +157,16 @@ namespace IniDotNet
 
         public IDictionary<string, string> DeserializeSection(string iniFileContents, string sectionName)
         {
+            IEnumerable<IniSection> sections;
             using (var reader = new StringReader(iniFileContents))
             {
-                IniSection section = Parser.Parse(reader)
-                    .SingleOrDefault(s => sectionName.Equals(s.Name, StringComparison.InvariantCultureIgnoreCase));
-
-                return section?.Contents ?? new Dictionary<string, string>();
+                sections = Parser.Parse(reader);
             }
+
+            IniSection section = sections
+                .SingleOrDefault(s => sectionName.Equals(s.Name, StringComparison.InvariantCultureIgnoreCase));
+
+            return section?.Contents ?? new Dictionary<string, string>();
         }
 
         #endregion
