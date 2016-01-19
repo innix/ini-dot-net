@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://raw.githubusercontent.com/innix/ini-dot-net/master/README.md</licenseUrl>
+    <projectUrl>https://github.com/innix/ini-dot-net</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright Phil Keeling 2016</copyright>
+    <tags>c# csharp ini deserialize parse</tags>
+  </metadata>
+</package>
