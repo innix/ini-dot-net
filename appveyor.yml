@@ -1,12 +1,24 @@
+version: 1.0.0-alpha-{build}
+
 init:
   - git config --global core.autocrlf input
 
 before_build:
-  - nuget restore
+  - cmd: nuget restore
 
 build:
-  publish_nuget: true
-  publish_nuget_symbols: true
+  verbosity: minimal
+
+after_build:
+  - cmd: >-
+      set PLATFORM=%PLATFORM%
+      
+      if "%PLATFORM%" == "Any CPU" set PLATFORM=AnyCPU
+      
+      nuget pack "C:\projects\ini-dot-net\IniDotNet\IniDotNet.csproj" -Properties "Configuration=%CONFIGURATION%;Platform=%PLATFORM%" -Version %APPVEYOR_BUILD_VERSION% -Symbols
+
+artifacts:
+  - path: '*.nupkg'
 
 platform: Any CPU
 
@@ -14,5 +26,12 @@ configuration:
   - Debug
   - Release
 
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+  
 matrix:
   fast_finish: true
