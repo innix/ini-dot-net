@@ -68,6 +68,11 @@ namespace IniDotNet.Parsers
                 string key = line.Substring(0, idx - offset);
                 string value = line.Substring(idx + 1 + offset);
 
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    throw new IniException($"Empty key on line {lineNumber}: '{line}'");
+                }
+
                 if (contents.ContainsKey(key))
                 {
                     if (throwOnDuplicateKeys)
