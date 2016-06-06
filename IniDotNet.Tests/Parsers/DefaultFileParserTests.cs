@@ -76,6 +76,28 @@ namespace IniDotNet.Tests.Parsers
             Assert.Equal("34", sectionTwo.Contents["Def"]);
         }
 
+        [Theory]
+        [InlineData("Abc = =", "=")]
+        [InlineData("Abc = ==", "==")]
+        [InlineData("Abc==", "=")]
+        [InlineData("Abc===", "==")]
+        [InlineData("Abc = =foo", "=foo")]
+        [InlineData("Abc = = foo", "= foo")]
+        [InlineData("Abc = foo=bar", "foo=bar")]
+        [InlineData("Abc = foo = bar", "foo = bar")]
+        public void ParsesValuesWithEqualsTokenValue(string line, string expected)
+        {
+            // Arrange.
+            IFileParser parser = new DefaultFileParser();
+            string data = $"[Foo]\n{line}\n";
+
+            // Act.
+            var sections = parser.Parse(new StringReader(data)).ToList();
+            var section = sections.Single();
+
+            // Assert.
+            Assert.Equal(expected, section.Contents.First().Value);
+        }
 
         [Theory]
         [InlineData("=123")]
