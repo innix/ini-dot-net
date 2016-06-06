@@ -43,6 +43,7 @@
     <Compile Include="Binders\AttributeBasedSectionBinder.cs" />
     <Compile Include="Converters\CollectionConverter.cs" />
     <Compile Include="Converters\CompositeConverter.cs" />
+    <Compile Include="Converters\DnsEndPointConverter.cs" />
     <Compile Include="Converters\IPEndPointConverter.cs" />
     <Compile Include="IniConverter.cs" />
     <Compile Include="IniConverterAttribute.cs" />
