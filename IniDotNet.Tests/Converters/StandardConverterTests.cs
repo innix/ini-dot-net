@@ -14,10 +14,6 @@ namespace IniDotNet.Tests.Converters
         [InlineData(typeof(string), "123", "123")]
         [InlineData(typeof(int), "123", 123)]
         [InlineData(typeof(uint), "123", 123u)]
-        [InlineData(typeof(bool), "true", true)]
-        [InlineData(typeof(bool), "false", false)]
-        [InlineData(typeof(bool), "0", false)]
-        [InlineData(typeof(bool), "1", true)]
         public void ConvertsToCorrectType(Type type, string val, object expectedConvertedVal)
         {
             // Arrange.

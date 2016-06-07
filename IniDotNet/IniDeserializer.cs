@@ -17,6 +17,7 @@ namespace IniDotNet
 
         private static readonly IConverter[] DefaultConverters =
         {
+            new BooleanConverter(), 
             new DnsEndPointConverter(),
             new IPEndPointConverter(),
             new StandardConverter()

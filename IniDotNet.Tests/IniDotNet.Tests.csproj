@@ -59,6 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Converters\BooleanConverterTests.cs" />
     <Compile Include="Converters\DnsEndPointConverterTests.cs" />
     <Compile Include="Converters\StandardConverterTests.cs" />
     <Compile Include="Parsers\DefaultFileParserTests.cs" />
