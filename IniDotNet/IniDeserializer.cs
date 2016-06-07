@@ -81,13 +81,37 @@ namespace IniDotNet
 
             foreach (var kvp in section.Contents)
             {
-                PropertyInfo destProperty = binding.Type.GetProperty(kvp.Key, SearchFlags | BindingFlags.IgnoreCase);
-                if (destProperty == null)
-                {
-                    Debug.WriteLine($"Type '{binding.Type.FullName}' has no suitable property" +
-                                    $"for '{section.Name}'.'{kvp.Key}'");
+                // Gets all properties of the bound type with an IniPropertyAttribute
+                // which has a name that matches the key we are working on.
+                var candidateProperties = binding.Type.GetProperties(SearchFlags)
+                    .Select(prop => new {prop, attr = prop.GetCustomAttribute<IniPropertyAttribute>()})
+                    .Where(x => x.attr != null)
+                    .Where(x => kvp.Key.Equals(x.attr.Name, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-                    continue;
+                if (candidateProperties.Count > 1)
+                {
+                    throw new IniException($"Multiple candidates for '{section.Name}'.'{kvp.Key}'.");
+                }
+
+                PropertyInfo destProperty;
+                if (candidateProperties.Count == 1)
+                {
+                    destProperty = candidateProperties.Single().prop;
+                }
+                else
+                {
+                    // Else if there is no suitable IniPropertyAttributes, just
+                    // search for a property with a matching name.
+                    destProperty = binding.Type.GetProperty(kvp.Key, SearchFlags | BindingFlags.IgnoreCase);
+
+                    if (destProperty == null)
+                    {
+                        Debug.WriteLine($"Type '{binding.Type.FullName}' has no suitable property" +
+                                        $"for '{section.Name}'.'{kvp.Key}'");
+
+                        continue;
+                    }
                 }
 
 
