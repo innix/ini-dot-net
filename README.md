@@ -1,9 +1,15 @@
 # Ini.NET
 [![Build status](https://ci.appveyor.com/api/projects/status/jpxdp8i8cwb957dj?svg=true)](https://ci.appveyor.com/project/innix/ini-dot-net)
+[![NuGet](https://img.shields.io/nuget/v/IniDotNet.svg)](https://www.nuget.org/packages/IniDotNet/)
 
 Ini.NET is a client library that provides an easy way to deserialize .ini files into .NET objects.
 
-## Example
+## Install
+Install via NuGet: [https://www.nuget.org/packages/IniDotNet/](https://www.nuget.org/packages/IniDotNet/)
+
+## Getting started
+IniDotNet deserializes .INI files into plain old .NET objects using the `IniConvert.DeserializeObject<T>(string)` method. Here is a trivial example:
+
 ```csharp
     public class Program
     {
@@ -13,36 +19,16 @@ Ini.NET is a client library that provides an easy way to deserialize .ini files 
 [General]
 Key = qwerty
 EnableThing = True
-
-[ABC]
-EndPoints = 62.252.201.71:4000,127.0.0.1:4001
-ConnectAttemptsPerEndPoint = 5
 ";
 
             Config cfg = IniConvert.DeserializeObject<Config>(contents);
-            
-            
-            Console.WriteLine(cfg.General.Key); // => "qwerty"
-            if (cfg.General.EnableThing)
-            {
-                Console.WriteLine("Thing enabled");
-            }
-
-            foreach (string endPoint in cfg.Other.EndPoints)
-            {
-                Console.WriteLine(endPoint);
-            }
-
-            Console.WriteLine(cfg.Other.ConnectAttemptsPerEndPoint);
+            Console.WriteLine(cfg.General.Key);
         }
     }
 
     class Config
     {
         public GeneralConfig General { get; private set; }
-
-        [IniSection("ABC")] // only required if property name doesn't match section name.
-        public AbcConfig Other { get; private set; }
     }
 
     public class GeneralConfig
@@ -50,12 +36,106 @@ ConnectAttemptsPerEndPoint = 5
         public string Key { get; private set; }
         public bool EnableThing { get; private set; }
     }
+```
 
-    public class AbcConfig
+### How do I map a .INI section to a .NET property that has a different name?
+Use the `[IniSection]` attribute. If your .INI section is called `[FooBar]` but want it mapped to a .NET property called `General`:
+```csharp
+    class Config
     {
-        [IniListProperty(",")] // split by comma to make a list.
-        public IReadOnlyList<string> EndPoints { get; private set; }
+        [IniSection("FooBar")]
+        public GeneralConfig General { get; private set; }
+    }
 
-        public int ConnectAttemptsPerEndPoint { get; private set; }
+    public class GeneralConfig
+    {
+        public string Key { get; private set; }
+        public bool EnableThing { get; private set; }
     }
 ```
+
+### How do I map a .INI field to a .NET property that has a different name?
+Use the `[IniProperty]` attribute. If you have a field in your `[General]` section called `SpecialKey` but want it mapped to the `Key` property:
+```csharp
+    class Config
+    {
+        public GeneralConfig General { get; private set; }
+    }
+
+    public class GeneralConfig
+    {
+        [IniProperty("SpecialKey")]
+        public string Key { get; private set; }
+        public bool EnableThing { get; private set; }
+    }
+```
+
+### I have a comma-separated list as one of my .INI values. How do I map it to a .NET List?
+Use the `[IniListProperty]`. Specify the delimeter used to separate the values:
+```csharp
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            string contents = @"
+[General]
+MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
+";
+
+            Config cfg = IniConvert.DeserializeObject<Config>(contents);
+            Console.WriteLine(cfg.General.Key);
+        }
+    }
+
+    class Config
+    {
+        public GeneralConfig General { get; private set; }
+    }
+
+    public class GeneralConfig
+    {
+        [IniListProperty(",")]
+        public List<string> MenuItems { get; private set; }
+    }
+```
+
+### How do I deserialize to more complex types?
+You can write your own `IniConverter` for types not supported out-the-box with IniDotNet. It's really easy:
+```csharp
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            string contents = @"
+[General]
+# seconds
+Delay = 30
+";
+
+            Config cfg = IniConvert.DeserializeObject<Config>(contents);
+            Console.WriteLine(cfg.General.Key);
+        }
+    }
+
+    class Config
+    {
+        public GeneralConfig General { get; private set; }
+    }
+
+    public class GeneralConfig
+    {
+        [IniConverter(typeof(SecondsToTimeSpanConverter))]
+        public TimeSpan Delay { get; private set; }
+    }
+
+    class SecondsToTimeSpanConverter : IniConverter
+    {
+        public override object ConvertFromString(string stringValue)
+        {
+            return TimeSpan.FromSeconds(int.Parse(stringValue));
+        }
+    }
+```
+
+### I am getting an exception about "no parameterless constructor" / "missing set method"!
+IniDotNet currently requires classes to have a parameterless constructor and properties with a `set`/`private set` (i.e. C# 6's getter-only properties are not supported). There is an open issue (#1) about this.
