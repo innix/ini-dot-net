@@ -103,7 +103,7 @@ MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
 ```
 
 ### How do I deserialize to more complex types?
-You can write your own `IniConverter` for types not supported out-the-box with IniDotNet. It's really easy:
+You can write your own `IniConverter` for types not supported out-the-box with IniDotNet.
 ```csharp
     public class Program
     {
@@ -116,7 +116,7 @@ Delay = 30
 ";
 
             Config cfg = IniConvert.DeserializeObject<Config>(contents);
-            Console.WriteLine(cfg.General.Key);
+            Console.WriteLine(cfg.General.Delay);
         }
     }
 
