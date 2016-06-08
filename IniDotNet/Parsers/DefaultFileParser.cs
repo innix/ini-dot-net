@@ -31,7 +31,7 @@ namespace IniDotNet.Parsers
                 lineNumber++;
 
                 // Skip whitespace and comments.
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (line.IsNullOrWhiteSpace()) continue;
                 if (line.StartsWith(";") || line.StartsWith("#")) continue;
 
                 // Section detected.
@@ -68,7 +68,7 @@ namespace IniDotNet.Parsers
                 string key = line.Substring(0, idx - offset);
                 string value = line.Substring(idx + 1 + offset);
 
-                if (string.IsNullOrWhiteSpace(key))
+                if (key.IsNullOrWhiteSpace())
                 {
                     throw new IniException($"Empty key on line {lineNumber}: '{line}'");
                 }

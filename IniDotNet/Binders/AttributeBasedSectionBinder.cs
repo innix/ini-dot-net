@@ -8,7 +8,7 @@ namespace IniDotNet.Binders
     {
         private const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        public IReadOnlyList<SectionBinding> Bind(Type modelType)
+        public IList<SectionBinding> Bind(Type modelType)
         {
             var bindings = new List<SectionBinding>();
 

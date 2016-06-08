@@ -7,18 +7,19 @@ namespace IniDotNet.Converters
 {
     public sealed class BooleanConverter : IConverter
     {
-        private static readonly IReadOnlyList<string> TruthyValues = new[]
+        private static readonly string[] TruthyValues =
         {
             "1", "yes"
         };
-        private static readonly IReadOnlyList<string> FalseyValues = new[]
+
+        private static readonly string[] FalseyValues =
         {
             "0", "no"
         };
 
         public bool TryConvertTo(Type type, string stringValue, out object converted)
         {
-            if (type != typeof(bool))
+            if (type != typeof (bool))
             {
                 converted = null;
                 return false;
@@ -36,7 +37,7 @@ namespace IniDotNet.Converters
             }
 
             TypeConverter tc = TypeDescriptor.GetConverter(type);
-            if (tc.CanConvertFrom(typeof(string)))
+            if (tc.CanConvertFrom(typeof (string)))
             {
                 converted = tc.ConvertFrom(stringValue);
                 return true;

@@ -16,17 +16,16 @@ namespace IniDotNet.Examples
         public static void Main(string[] args)
         {
             // TODO: Inject properties through constructor if available.
-            // TODO: Allow custom type conversion.
 
             string contents = @"
-[General]
+[Generalz]
 Key = qwerty
 EnableThing = True
 
 [ABC]
 EndPoints = 62.252.201.71:4000,127.0.0.1:4001
 ConnectAttemptsPerEndPoint = 5
-DelayBetweenConnects = 5000
+DelayBetweenConnects = 10
 ";
 
             Config cfg = IniConvert.DeserializeObject<Config>(contents);
@@ -41,12 +40,14 @@ DelayBetweenConnects = 5000
             {
                 Console.WriteLine(endPoint);
             }
+
+            Console.WriteLine(cfg.Abc.DelayBetweenConnects);
         }
     }
 
     class Config
     {
-        [IniSection("General")]
+        [IniSection("Generalz")]
         public GeneralConfig General { get; private set; }
 
         [IniSection("ABC")]
@@ -55,7 +56,7 @@ DelayBetweenConnects = 5000
 
     public class GeneralConfig
     {
-        public string Key { get; private set; }
+        public string Key { get; set; }
         public bool EnableThing { get; private set; }
     }
 
@@ -65,7 +66,17 @@ DelayBetweenConnects = 5000
         [IniListProperty(",")]
         public IReadOnlyList<IPEndPoint> EndPoints { get; private set; }
 
-        public int DelayBetweenConnects { get; private set; }
+        [IniConverter(typeof(SecondsToTimeSpanConverter))]
+        public TimeSpan DelayBetweenConnects { get; private set; }
+
         public int ConnectAttemptsPerEndPoint { get; private set; }
+    }
+
+    class SecondsToTimeSpanConverter : IniConverter
+    {
+        public override object ConvertFromString(string stringValue)
+        {
+            return TimeSpan.FromSeconds(int.Parse(stringValue));
+        }
     }
 }

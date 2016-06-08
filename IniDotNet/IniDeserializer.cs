@@ -48,7 +48,7 @@ namespace IniDotNet
 
 
             // Locates the properties within the model type and maps them to an .INI section.
-            IReadOnlyList<SectionBinding> bindings = SectionBinder.Bind(configModelType);
+            IList<SectionBinding> bindings = SectionBinder.Bind(configModelType);
 
             using (var reader = new StringReader(iniFileContents))
             {
@@ -69,7 +69,7 @@ namespace IniDotNet
 
                     // Deserialize section and set the property in our model object.
                     object configSectionModel = DeserializeSection(section, binding);
-                    configModelPropertyInfo.SetValue(configModel, configSectionModel);
+                    configModelPropertyInfo.SetValue(configModel, configSectionModel, null);
                 }
             }
 
@@ -114,8 +114,7 @@ namespace IniDotNet
                         continue;
                     }
                 }
-
-
+                
                 IniListPropertyAttribute listAttr = destProperty.GetCustomAttribute<IniListPropertyAttribute>();
                 IniConverterAttribute convertAttr = destProperty.GetCustomAttribute<IniConverterAttribute>();
 
@@ -151,7 +150,7 @@ namespace IniDotNet
                         throw new IniException($"['{section.Name}'.'{kvp.Key}'] No conversion for property.");
                     }
 
-                    destProperty.SetValue(configSectionModel, convertedValue);
+                    destProperty.SetValue(configSectionModel, convertedValue, null);
                 }
                 catch (NotSupportedException ex)
                 {
