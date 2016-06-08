@@ -83,7 +83,10 @@ MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
 ";
 
             Config cfg = IniConvert.DeserializeObject<Config>(contents);
-            Console.WriteLine(cfg.General.Key);
+            foreach (string menuItem in cfg.General.MenuItems)
+            {
+                Console.WriteLine(menuItem);
+            }
         }
     }
 
