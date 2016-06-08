@@ -26,7 +26,7 @@ EnableThing = True
         }
     }
 
-    class Config
+    public class Config
     {
         public GeneralConfig General { get; private set; }
     }
@@ -41,7 +41,7 @@ EnableThing = True
 ### How do I map a .INI section to a .NET property that has a different name?
 Use the `[IniSection]` attribute. If your .INI section is called `[FooBar]` but want it mapped to a .NET property called `General`:
 ```csharp
-    class Config
+    public class Config
     {
         [IniSection("FooBar")]
         public GeneralConfig General { get; private set; }
@@ -57,7 +57,7 @@ Use the `[IniSection]` attribute. If your .INI section is called `[FooBar]` but 
 ### How do I map a .INI field to a .NET property that has a different name?
 Use the `[IniProperty]` attribute. If you have a field in your `[General]` section called `SpecialKey` but want it mapped to the `Key` property:
 ```csharp
-    class Config
+    public class Config
     {
         public GeneralConfig General { get; private set; }
     }
@@ -90,7 +90,7 @@ MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
         }
     }
 
-    class Config
+    public class Config
     {
         public GeneralConfig General { get; private set; }
     }
@@ -120,7 +120,7 @@ Delay = 30
         }
     }
 
-    class Config
+    public class Config
     {
         public GeneralConfig General { get; private set; }
     }
@@ -131,7 +131,7 @@ Delay = 30
         public TimeSpan Delay { get; private set; }
     }
 
-    class SecondsToTimeSpanConverter : IniConverter
+    public class SecondsToTimeSpanConverter : IniConverter
     {
         public override object ConvertFromString(string stringValue)
         {
