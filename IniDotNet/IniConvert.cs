@@ -27,8 +27,7 @@ namespace IniDotNet
                 return (T)deserializer.DeserializeSection(iniFileContents, iniSection);
             }
 
-            throw new NotSupportedException();
-            //return deserializer.DeserializeSection<T>(iniFileContents, iniSection);
+            return deserializer.DeserializeSection<T>(iniFileContents, iniSection);
         }
     }
 }

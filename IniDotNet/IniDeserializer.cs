@@ -68,23 +68,34 @@ namespace IniDotNet
                     PropertyInfo configModelPropertyInfo = binding.Property;
 
                     // Deserialize section and set the property in our model object.
-                    object configSectionModel = DeserializeSection(section, binding);
+                    object configSectionModel = DeserializeSection(section, binding.Type);
                     configModelPropertyInfo.SetValue(configModel, configSectionModel, null);
                 }
             }
 
-            return (T) configModel;
+            return (T)configModel;
         }
 
-        private object DeserializeSection(IniSection section, SectionBinding binding)
+        public T DeserializeSection<T>(string iniFileContents, string iniSection)
         {
-            object configSectionModel = Activator.CreateInstance(binding.Type);
+            Type configModelType = typeof(T);
+
+            using (var reader = new StringReader(iniFileContents))
+            {
+                IniSection section = Parser.Parse(reader).Single(sec => sec.Name == iniSection);
+                return (T) DeserializeSection(section, configModelType);
+            }
+        }
+
+        private object DeserializeSection(IniSection section, Type bindingType)
+        {
+            object configSectionModel = Activator.CreateInstance(bindingType);
 
             foreach (var kvp in section.Contents)
             {
                 // Gets all properties of the bound type with an IniPropertyAttribute
                 // which has a name that matches the key we are working on.
-                var candidateProperties = binding.Type.GetProperties(SearchFlags)
+                var candidateProperties = bindingType.GetProperties(SearchFlags)
                     .Select(prop => new {prop, attr = prop.GetCustomAttribute<IniPropertyAttribute>()})
                     .Where(x => x.attr != null)
                     .Where(x => kvp.Key.Equals(x.attr.Name, StringComparison.OrdinalIgnoreCase))
@@ -104,11 +115,11 @@ namespace IniDotNet
                 {
                     // Else if there is no suitable IniPropertyAttributes, just
                     // search for a property with a matching name.
-                    destProperty = binding.Type.GetProperty(kvp.Key, SearchFlags | BindingFlags.IgnoreCase);
+                    destProperty = bindingType.GetProperty(kvp.Key, SearchFlags | BindingFlags.IgnoreCase);
 
                     if (destProperty == null)
                     {
-                        Debug.WriteLine($"Type '{binding.Type.FullName}' has no suitable property" +
+                        Debug.WriteLine($"Type '{bindingType.FullName}' has no suitable property" +
                                         $"for '{section.Name}'.'{kvp.Key}'");
 
                         continue;
