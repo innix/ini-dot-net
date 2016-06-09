@@ -61,6 +61,7 @@
     <Compile Include="Converters\BooleanConverterTests.cs" />
     <Compile Include="Converters\DnsEndPointConverterTests.cs" />
     <Compile Include="Converters\StandardConverterTests.cs" />
+    <Compile Include="IniDeserializerTests.cs" />
     <Compile Include="Parsers\DefaultFileParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

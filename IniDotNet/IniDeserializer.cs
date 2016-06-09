@@ -50,30 +50,33 @@ namespace IniDotNet
             // Locates the properties within the model type and maps them to an .INI section.
             IList<SectionBinding> bindings = SectionBinder.Bind(configModelType);
 
+            List<IniSection> iniSections;
             using (var reader = new StringReader(iniFileContents))
             {
-                foreach (IniSection section in Parser.Parse(reader))
-                {
-                    // Finds the binding for the current INI section.
-                    SectionBinding binding = bindings
-                        .SingleOrDefault(b => section.Name.Equals(b.Name, StringComparison.OrdinalIgnoreCase));
-
-                    if (binding == null)
-                    {
-                        Debug.WriteLine($"Section '{section.Name}' is not bound to a type, skipping...");
-                        continue;
-                    }
-
-
-                    PropertyInfo configModelPropertyInfo = binding.Property;
-
-                    // Deserialize section and set the property in our model object.
-                    object configSectionModel = DeserializeSection(section, binding.Type);
-                    configModelPropertyInfo.SetValue(configModel, configSectionModel, null);
-                }
+                iniSections = Parser.Parse(reader).ToList();
             }
 
-            return (T)configModel;
+            foreach (IniSection section in iniSections)
+            {
+                // Finds the binding for the current INI section.
+                SectionBinding binding = bindings
+                    .SingleOrDefault(b => section.Name.Equals(b.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (binding == null)
+                {
+                    Debug.WriteLine($"Section '{section.Name}' is not bound to a type, skipping...");
+                    continue;
+                }
+
+
+                PropertyInfo configModelPropertyInfo = binding.Property;
+
+                // Deserialize section and set the property in our model object.
+                object configSectionModel = DeserializeSection(section, binding.Type);
+                configModelPropertyInfo.SetValue(configModel, configSectionModel, null);
+            }
+
+            return (T) configModel;
         }
 
         public T DeserializeSection<T>(string iniFileContents, string iniSection)
@@ -196,7 +199,7 @@ namespace IniDotNet
             IEnumerable<IniSection> sections;
             using (var reader = new StringReader(iniFileContents))
             {
-                sections = Parser.Parse(reader);
+                sections = Parser.Parse(reader).ToList();
             }
 
             IniSection section = sections
