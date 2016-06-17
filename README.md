@@ -8,7 +8,7 @@ Ini.NET is a client library that provides an easy way to deserialize .ini files 
 Install via NuGet: [https://www.nuget.org/packages/IniDotNet/](https://www.nuget.org/packages/IniDotNet/)
 
 ## Getting started
-IniDotNet deserializes .INI files into plain old .NET objects using the `IniConvert.DeserializeObject<T>(string)` method. Here is a trivial example:
+Ini.NET deserializes .INI files into plain old .NET objects using the `IniConvert.DeserializeObject<T>(string)` method. Here is a trivial example:
 
 ```csharp
     public class Program
@@ -103,7 +103,7 @@ MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
 ```
 
 ### How do I deserialize to more complex types?
-You can write your own `IniConverter` for types not supported out-the-box with IniDotNet.
+You can write your own `IniConverter` for types not supported out-the-box with Ini.NET.
 ```csharp
     public class Program
     {
@@ -141,4 +141,4 @@ Delay = 30
 ```
 
 ### I am getting an exception about "no parameterless constructor" / "missing set method"!
-IniDotNet currently requires classes to have a parameterless constructor and properties with a `set`/`private set` (i.e. C# 6's getter-only properties are not supported). There is an open issue (#1) about this.
+Ini.NET currently requires classes to have a parameterless constructor and properties with a `set`/`private set` (i.e. C# 6's getter-only properties are not supported). There is an open issue (#1) about this.
