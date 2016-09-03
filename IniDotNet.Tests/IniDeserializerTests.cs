@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace IniDotNet.Tests
@@ -12,11 +10,41 @@ namespace IniDotNet.Tests
         [Fact]
         public void DeserializesIntoDictionary()
         {
+            // Arrange.
             var deserializer = new IniDeserializer();
-            var dict = deserializer.Deserialize("[Foo]\nBar = 123\n");
 
+            // Act.
+            var dict = deserializer.Deserialize("Abc = 321\n[Foo]\nBar = 123\n");
+
+            // Assert.
+            Assert.Equal(2, dict.Count);
+
+            var first = dict.First();
+            var second = dict.ElementAt(1);
+
+            Assert.Equal("", first.Key);
+            Assert.Equal(1, first.Value.Count);
+            Assert.True(first.Value.ContainsKey("Abc"));
+            Assert.Equal("321", first.Value["Abc"]);
+
+            Assert.Equal("Foo", second.Key);
+            Assert.Equal(1, second.Value.Count);
+            Assert.True(second.Value.ContainsKey("Bar"));
+            Assert.Equal("123", second.Value["Bar"]);
+        }
+
+        [Fact]
+        public void DeserializesTopLevelIntoDictionary()
+        {
+            // Arrange.
+            var deserializer = new IniDeserializer();
+
+            // Act.
+            var dict = deserializer.Deserialize("Bar = 123\n");
+
+            // Assert.
             Assert.Equal(1, dict.Count);
-            Assert.Equal("Foo", dict.First().Key);
+            Assert.Equal("", dict.First().Key);
             Assert.Equal(1, dict.First().Value.Count);
             Assert.True(dict.First().Value.ContainsKey("Bar"));
             Assert.Equal("123", dict.First().Value["Bar"]);
@@ -25,42 +53,71 @@ namespace IniDotNet.Tests
         [Fact]
         public void DeserializesIntoPoco()
         {
+            // Arrange.
             var deserializer = new IniDeserializer();
-            var cfg = deserializer.Deserialize<FooConfig>("[Foo]\nBar = 123\n");
 
+            // Act.
+            var cfg = deserializer.Deserialize<Config>("Number = 321\n[Foo]\nBar = 123\n");
+
+            // Assert.
             Assert.NotNull(cfg);
             Assert.NotNull(cfg.Foo);
+            Assert.Equal(321, cfg.Number);
             Assert.Equal(123, cfg.Foo.Bar);
         }
 
         [Fact]
         public void DeserializesSectionIntoDictionary()
         {
+            // Arrange.
             var deserializer = new IniDeserializer();
+
+            // Act.
             IDictionary<string, string> dict = deserializer.DeserializeSection("[Foo]\nBar = 123\n", "Foo");
 
+            // Assert.
             Assert.Equal(1, dict.Count);
             Assert.True(dict.ContainsKey("Bar"));
             Assert.Equal("123", dict["Bar"]);
+        }
 
+        [Fact]
+        public void DeserializesTopLevelSectionIntoDictionary()
+        {
+            // Arrange.
+            var deserializer = new IniDeserializer();
+
+            // Act.
+            IDictionary<string, string> dict = deserializer.DeserializeSection("\nBar = 123\n", "");
+
+            // Assert.
+            Assert.Equal(1, dict.Count);
+            Assert.True(dict.ContainsKey("Bar"));
+            Assert.Equal("123", dict["Bar"]);
         }
 
         [Fact]
         public void DeserializesSectionIntoPoco()
         {
+            // Arrange.
             var deserializer = new IniDeserializer();
-            var foo = deserializer.DeserializeSection<Foo>("[Foo]\nBar = 123\n", "Foo");
 
+            // Act.
+            var foo = deserializer.DeserializeSection<FooSection>("[Foo]\nBar = 123\n", "Foo");
+
+            // Assert.
             Assert.NotNull(foo);
             Assert.Equal(123, foo.Bar);
         }
 
-        private class FooConfig
+        private class Config
         {
-            public Foo Foo { get; set; }
+            public int Number { get; set; }
+
+            public FooSection Foo { get; set; }
         }
 
-        private class Foo
+        private class FooSection
         {
             public int Bar { get; set; }
         }

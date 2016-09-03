@@ -76,6 +76,36 @@ namespace IniDotNet.Tests.Parsers
             Assert.Equal("34", sectionTwo.Contents["Def"]);
         }
 
+        [Fact]
+        public void ParsesMultipleSectionsWithSameKeyName()
+        {
+            // Arrange.
+            IFileParser parser = new DefaultFileParser();
+            string data = "[Foo]\nAbc = 12\n[Bar]\nAbc = 34";
+
+            // Act.
+            var sections = parser.Parse(new StringReader(data)).ToList();
+            var sectionOne = sections.FirstOrDefault();
+            var sectionTwo = sections.Skip(1).FirstOrDefault();
+
+            // Assert.
+            Assert.Equal(2, sections.Count);
+            Assert.NotNull(sectionOne);
+            Assert.NotNull(sectionTwo);
+
+            Assert.Equal("Foo", sectionOne.Name);
+            Assert.Equal(1, sectionOne.Contents.Count);
+
+            Assert.True(sectionOne.Contents.ContainsKey("Abc"));
+            Assert.Equal("12", sectionOne.Contents["Abc"]);
+
+            Assert.Equal("Bar", sectionTwo.Name);
+            Assert.Equal(1, sectionTwo.Contents.Count);
+
+            Assert.True(sectionTwo.Contents.ContainsKey("Abc"));
+            Assert.Equal("34", sectionTwo.Contents["Abc"]);
+        }
+
         [Theory]
         [InlineData("Abc = =", "=")]
         [InlineData("Abc = ==", "==")]
@@ -97,6 +127,92 @@ namespace IniDotNet.Tests.Parsers
 
             // Assert.
             Assert.Equal(expected, section.Contents.First().Value);
+        }
+
+        [Fact]
+        public void ParsesTopLevelSection()
+        {
+            // Arrange.
+            IFileParser parser = new DefaultFileParser();
+            string data = "Abc = 123\nBar = hello";
+
+            // Act.
+            var sections = parser.Parse(new StringReader(data)).ToList();
+            var section = sections.FirstOrDefault();
+
+            // Assert.
+            Assert.Equal(1, sections.Count);
+            Assert.NotNull(section);
+
+            Assert.True(section.IsTopLevel);
+            Assert.Equal(2, section.Contents.Count);
+
+            Assert.True(section.Contents.ContainsKey("Abc"));
+            Assert.Equal("123", section.Contents["Abc"]);
+
+            Assert.True(section.Contents.ContainsKey("Bar"));
+            Assert.Equal("hello", section.Contents["Bar"]);
+        }
+
+        [Fact]
+        public void ParsesTopLevelAndNamedSections()
+        {
+            // Arrange.
+            IFileParser parser = new DefaultFileParser();
+            string data = "Abc = 12\n[Foo]\nDef = 34";
+
+            // Act.
+            var sections = parser.Parse(new StringReader(data)).ToList();
+            var sectionOne = sections.FirstOrDefault();
+            var sectionTwo = sections.Skip(1).FirstOrDefault();
+
+            // Assert.
+            Assert.Equal(2, sections.Count);
+            Assert.NotNull(sectionOne);
+            Assert.NotNull(sectionTwo);
+
+            Assert.True(sectionOne.IsTopLevel);
+            Assert.Equal(1, sectionOne.Contents.Count);
+
+            Assert.True(sectionOne.Contents.ContainsKey("Abc"));
+            Assert.Equal("12", sectionOne.Contents["Abc"]);
+
+            Assert.Equal("Foo", sectionTwo.Name);
+            Assert.Equal(1, sectionTwo.Contents.Count);
+
+            Assert.True(sectionTwo.Contents.ContainsKey("Def"));
+            Assert.Equal("34", sectionTwo.Contents["Def"]);
+        }
+
+
+        [Fact]
+        public void ParsesTopLevelAndNamedSectionsWithSameKeyName()
+        {
+            // Arrange.
+            IFileParser parser = new DefaultFileParser();
+            string data = "Abc = 12\n[Foo]\nAbc = 34";
+
+            // Act.
+            var sections = parser.Parse(new StringReader(data)).ToList();
+            var sectionOne = sections.FirstOrDefault();
+            var sectionTwo = sections.Skip(1).FirstOrDefault();
+
+            // Assert.
+            Assert.Equal(2, sections.Count);
+            Assert.NotNull(sectionOne);
+            Assert.NotNull(sectionTwo);
+
+            Assert.True(sectionOne.IsTopLevel);
+            Assert.Equal(1, sectionOne.Contents.Count);
+
+            Assert.True(sectionOne.Contents.ContainsKey("Abc"));
+            Assert.Equal("12", sectionOne.Contents["Abc"]);
+
+            Assert.Equal("Foo", sectionTwo.Name);
+            Assert.Equal(1, sectionTwo.Contents.Count);
+
+            Assert.True(sectionTwo.Contents.ContainsKey("Abc"));
+            Assert.Equal("34", sectionTwo.Contents["Abc"]);
         }
 
         [Theory]

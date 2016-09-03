@@ -12,5 +12,7 @@ namespace IniDotNet
 
         public string Name { get; }
         public IDictionary<string, string> Contents { get; }
+
+        public bool IsTopLevel => Name == null;
     }
 }
