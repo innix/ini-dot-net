@@ -8,7 +8,7 @@ Ini.NET is a client library that provides an easy way to deserialize .ini files 
 Install via NuGet: [https://www.nuget.org/packages/IniDotNet/](https://www.nuget.org/packages/IniDotNet/)
 
 ## Getting started
-Ini.NET deserializes .INI files into plain old .NET objects using the `IniConvert.DeserializeObject<T>(string)` method. Here is a trivial example:
+Ini.NET deserializes .ini files into plain old .NET objects using the `IniConvert.DeserializeObject<T>(string)` method. Here is a trivial example:
 
 ```csharp
     public class Program
@@ -38,8 +38,8 @@ EnableThing = True
     }
 ```
 
-### How do I map a .INI section to a .NET property that has a different name?
-Use the `[IniSection]` attribute. If your .INI section is called `[FooBar]` but want it mapped to a .NET property called `General`:
+### Deserialize .ini section to a different property name
+Use the `[IniSection]` attribute. If your .ini section is called `[FooBar]` but want it mapped to a .NET property called `General`:
 ```csharp
     public class Config
     {
@@ -54,7 +54,7 @@ Use the `[IniSection]` attribute. If your .INI section is called `[FooBar]` but 
     }
 ```
 
-### How do I map a .INI field to a .NET property that has a different name?
+### Deserialize .ini field to a different property name
 Use the `[IniProperty]` attribute. If you have a field in your `[General]` section called `SpecialKey` but want it mapped to the `Key` property:
 ```csharp
     public class Config
@@ -70,7 +70,7 @@ Use the `[IniProperty]` attribute. If you have a field in your `[General]` secti
     }
 ```
 
-### I have a comma-separated list as one of my .INI values. How do I map it to a .NET List?
+### Deserializing a .ini value into a .NET list
 Use the `[IniListProperty]`. Specify the delimeter used to separate the values:
 ```csharp
     public class Program
@@ -102,7 +102,7 @@ MenuItems = Milkshake,Fries,Burger,Ice cream,Cake
     }
 ```
 
-### How do I deserialize to more complex types?
+### Custom deserialization
 You can write your own `IniConverter` for types not supported out-the-box with Ini.NET.
 ```csharp
     public class Program
