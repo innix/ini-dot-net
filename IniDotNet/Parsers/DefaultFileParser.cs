@@ -43,6 +43,12 @@ namespace IniDotNet.Parsers
                     }
 
                     name = line.Substring(1, line.Length - 2);
+                    if (name.Length == 0)
+                    {
+                        // Empty section name not allowed: reserved for top-level section.
+                        throw new IniException($"Empty section name on line {lineNumber}: '{line}'");
+                    }
+
                     contents = new Dictionary<string, string>();
                     continue;
                 }

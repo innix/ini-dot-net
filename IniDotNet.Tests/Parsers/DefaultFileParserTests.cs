@@ -236,6 +236,16 @@ namespace IniDotNet.Tests.Parsers
         }
 
         [Fact]
+        public void ThrowsWhenEmptySectionName()
+        {
+            IFileParser parser = new DefaultFileParser();
+            string data = "[]\nAbc = 123";
+
+            Assert.ThrowsAny<IniException>(
+                () => parser.Parse(new StringReader(data)).ToList());
+        }
+
+        [Fact]
         public void ThrowsWhenDuplicateKey()
         {
             IFileParser parser = new DefaultFileParser(true);
