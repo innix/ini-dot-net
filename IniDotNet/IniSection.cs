@@ -14,5 +14,7 @@ namespace IniDotNet
         public IDictionary<string, string> Contents { get; }
 
         public bool IsTopLevel => Name == null;
+
+        internal string InternalName => Name == "" ? "<top level>" : Name;
     }
 }

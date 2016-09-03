@@ -56,7 +56,13 @@ namespace IniDotNet
                 iniSections = Parser.Parse(reader).ToList();
             }
 
-            foreach (IniSection section in iniSections)
+            IniSection topLevelSection = iniSections.FirstOrDefault(s => s.IsTopLevel);
+            if (topLevelSection != null)
+            {
+                configModel = DeserializeSection(topLevelSection, typeof(T), configModel);
+            }
+
+            foreach (IniSection section in iniSections.Where(s => !s.IsTopLevel))
             {
                 // Finds the binding for the current INI section.
                 SectionBinding binding = bindings
@@ -64,7 +70,7 @@ namespace IniDotNet
 
                 if (binding == null)
                 {
-                    Debug.WriteLine($"Section '{section.Name}' is not bound to a type, skipping...");
+                    Debug.WriteLine($"Section '{section.InternalName}' is not bound to a type, skipping...");
                     continue;
                 }
 
@@ -93,7 +99,11 @@ namespace IniDotNet
         private object DeserializeSection(IniSection section, Type bindingType)
         {
             object configSectionModel = Activator.CreateInstance(bindingType);
+            return DeserializeSection(section, bindingType, configSectionModel);
+        }
 
+        private object DeserializeSection(IniSection section, Type bindingType, object configSectionModel)
+        {
             foreach (var kvp in section.Contents)
             {
                 // Gets all properties of the bound type with an IniPropertyAttribute
@@ -106,7 +116,7 @@ namespace IniDotNet
 
                 if (candidateProperties.Count > 1)
                 {
-                    throw new IniException($"Multiple candidates for '{section.Name}'.'{kvp.Key}'.");
+                    throw new IniException($"Multiple candidates for '{section.InternalName}'.'{kvp.Key}'.");
                 }
 
                 PropertyInfo destProperty;
@@ -123,7 +133,7 @@ namespace IniDotNet
                     if (destProperty == null)
                     {
                         Debug.WriteLine($"Type '{bindingType.FullName}' has no suitable property" +
-                                        $"for '{section.Name}'.'{kvp.Key}'");
+                                        $"for '{section.InternalName}'.'{kvp.Key}'");
 
                         continue;
                     }
@@ -161,14 +171,14 @@ namespace IniDotNet
                     object convertedValue;
                     if (!converter.TryConvertTo(destProperty.PropertyType, kvp.Value, out convertedValue))
                     {
-                        throw new IniException($"['{section.Name}'.'{kvp.Key}'] No conversion for property.");
+                        throw new IniException($"['{section.InternalName}'.'{kvp.Key}'] No conversion for property.");
                     }
 
                     destProperty.SetValue(configSectionModel, convertedValue, null);
                 }
                 catch (NotSupportedException ex)
                 {
-                    throw new IniException($"['{section.Name}'.'{kvp.Key}'] {ex.Message}");
+                    throw new IniException($"['{section.InternalName}'.'{kvp.Key}'] {ex.Message}");
                 }
             }
 
@@ -181,17 +191,15 @@ namespace IniDotNet
 
         public IDictionary<string, IDictionary<string, string>> Deserialize(string iniFileContents)
         {
-            var configModel = new Dictionary<string, IDictionary<string, string>>();
-
             using (var reader = new StringReader(iniFileContents))
             {
+                var configModel = new Dictionary<string, IDictionary<string, string>>();
                 foreach (IniSection section in Parser.Parse(reader))
                 {
-                    configModel.Add(section.Name, section.Contents);
+                    configModel.Add(section.IsTopLevel ? "" : section.Name, section.Contents);
                 }
+                return configModel;
             }
-
-            return configModel;
         }
 
         public IDictionary<string, string> DeserializeSection(string iniFileContents, string sectionName)
@@ -200,6 +208,12 @@ namespace IniDotNet
             using (var reader = new StringReader(iniFileContents))
             {
                 sections = Parser.Parse(reader).ToList();
+            }
+
+            // Empty section name = top-level section.
+            if (sectionName.Length == 0)
+            {
+                return sections.SingleOrDefault(s => s.IsTopLevel)?.Contents ?? new Dictionary<string, string>();
             }
 
             IniSection section = sections

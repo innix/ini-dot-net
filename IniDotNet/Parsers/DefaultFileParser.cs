@@ -37,7 +37,7 @@ namespace IniDotNet.Parsers
                 // Section detected.
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
-                    if (name != null)
+                    if (name != null || contents.Count > 0)
                     {
                         yield return new IniSection(name, contents);
                     }
@@ -87,7 +87,7 @@ namespace IniDotNet.Parsers
                 contents.Add(key, value);
             }
 
-            if (name != null)
+            if (name != null || contents.Count > 0)
             {
                 yield return new IniSection(name, contents);
             }
