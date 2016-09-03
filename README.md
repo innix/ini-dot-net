@@ -70,7 +70,7 @@ Use the `[IniProperty]` attribute. If you have a field in your `[General]` secti
     }
 ```
 
-### Deserializing a .ini value into a .NET list
+### Deserialize .ini value to a .NET list
 Use the `[IniListProperty]`. Specify the delimeter used to separate the values:
 ```csharp
     public class Program
