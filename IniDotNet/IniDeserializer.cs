@@ -46,10 +46,6 @@ namespace IniDotNet
             object configModel = Activator.CreateInstance<T>();
             Type configModelType = typeof(T);
 
-
-            // Locates the properties within the model type and maps them to an .INI section.
-            IList<SectionBinding> bindings = SectionBinder.Bind(configModelType);
-
             List<IniSection> iniSections;
             using (var reader = new StringReader(iniFileContents))
             {
@@ -62,7 +58,12 @@ namespace IniDotNet
                 configModel = DeserializeSection(topLevelSection, typeof(T), configModel);
             }
 
-            foreach (IniSection section in iniSections.Where(s => !s.IsTopLevel))
+            List<IniSection> iniSectionsExceptTopLevel = iniSections.Where(s => !s.IsTopLevel).ToList();
+
+            // Locates the properties within the model type and maps them to an .INI section.
+            IList<SectionBinding> bindings = SectionBinder.Bind(configModelType, iniSectionsExceptTopLevel);
+
+            foreach (IniSection section in iniSectionsExceptTopLevel)
             {
                 // Finds the binding for the current INI section.
                 SectionBinding binding = bindings

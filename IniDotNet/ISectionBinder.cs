@@ -9,6 +9,6 @@ namespace IniDotNet
     /// </summary>
     public interface ISectionBinder
     {
-        IList<SectionBinding> Bind(Type modelType);
+        IList<SectionBinding> Bind(Type modelType, IList<IniSection> sections);
     }
 }

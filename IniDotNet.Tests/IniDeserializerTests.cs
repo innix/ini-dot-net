@@ -67,6 +67,22 @@ namespace IniDotNet.Tests
         }
 
         [Fact]
+        public void DeserializesIntoPocoWithAttributes()
+        {
+            // Arrange.
+            var deserializer = new IniDeserializer();
+
+            // Act.
+            var cfg = deserializer.Deserialize<ConfigWithAttributes>("Num = 321\n[Fuzz]\nBuzz = 123\n");
+
+            // Assert.
+            Assert.NotNull(cfg);
+            Assert.NotNull(cfg.Foo);
+            Assert.Equal(321, cfg.Number);
+            Assert.Equal(123, cfg.Foo.Bar);
+        }
+
+        [Fact]
         public void DeserializesSectionIntoDictionary()
         {
             // Arrange.
@@ -110,6 +126,20 @@ namespace IniDotNet.Tests
             Assert.Equal(123, foo.Bar);
         }
 
+        [Fact]
+        public void DeserializesSectionIntoPocoWithAttributes()
+        {
+            // Arrange.
+            var deserializer = new IniDeserializer();
+
+            // Act.
+            var foo = deserializer.DeserializeSection<FooSectionWithAttributes>("[Fuzz]\nBuzz = 123\n", "Fuzz");
+
+            // Assert.
+            Assert.NotNull(foo);
+            Assert.Equal(123, foo.Bar);
+        }
+
         private class Config
         {
             public int Number { get; set; }
@@ -119,6 +149,21 @@ namespace IniDotNet.Tests
 
         private class FooSection
         {
+            public int Bar { get; set; }
+        }
+
+        private class ConfigWithAttributes
+        {
+            [IniProperty("Num")]
+            public int Number { get; set; }
+
+            [IniSection("Fuzz")]
+            public FooSectionWithAttributes Foo { get; set; }
+        }
+
+        private class FooSectionWithAttributes
+        {
+            [IniProperty("Buzz")]
             public int Bar { get; set; }
         }
     }
