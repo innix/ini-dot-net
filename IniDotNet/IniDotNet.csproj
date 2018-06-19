@@ -5,7 +5,7 @@
     <Authors>Phil Keeling</Authors>
     <PackageId>IniDotNet</PackageId>
     <Product>IniDotNet</Product>
-    <Company />
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
 </Project>

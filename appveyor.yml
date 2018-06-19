@@ -1,17 +1,11 @@
 version: 1.0.0-alpha-{build}
 
-build:
-  verbosity: minimal
-
-artifacts:
-  - path: '*.nupkg'
-
-platform: Any CPU
+image: Visual Studio 2017
 
 configuration:
-  - Debug
   - Release
-  
+  - Debug
+
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
@@ -21,5 +15,10 @@ dotnet_csproj:
   file_version: '{version}'
   informational_version: '{version}'
 
-matrix:
-  fast_finish: true
+before_build:
+  - cmd: dotnet restore
+
+build:
+  publish_nuget: true
+  publish_nuget_symbols: true
+  verbosity: minimal
